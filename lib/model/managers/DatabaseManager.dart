@@ -5,8 +5,10 @@ import 'package:path/path.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 
+import '../objects/PlannedExercise.dart';
 import '../objects/Workout.dart';
 import '../objects/WorkoutSet.dart';
+import '../support/Constants.dart';
 
 class DatabaseManager {
   static final DatabaseManager instance = DatabaseManager._internal();
@@ -27,8 +29,8 @@ class DatabaseManager {
     if (kIsWeb) {
       databaseFactory = databaseFactoryFfiWeb;
       return await openDatabase(
-        'ironlog.db',
-        version: 2,
+        Constants.dbName,
+        version: 3,
         onCreate: _createDB,
         onUpgrade: _upgradeDB,
       );
@@ -39,11 +41,11 @@ class DatabaseManager {
       }
 
       final dbPath = await getDatabasesPath();
-      final path = join(dbPath, 'ironlog.db');
+      final path = join(dbPath, Constants.dbName);
 
       return await openDatabase(
         path,
-        version: 2,
+        version: 3,
         onConfigure: (db) async {
           await db.execute('PRAGMA foreign_keys = ON');
         },
@@ -55,40 +57,61 @@ class DatabaseManager {
 
   Future<void> _createDB(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE workouts (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        date TEXT NOT NULL,
-        completed INTEGER NOT NULL DEFAULT 0
+      CREATE TABLE IF NOT EXISTS ${Constants.tableWorkouts} (
+        ${Constants.colId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${Constants.colWorkoutName} TEXT NOT NULL,
+        ${Constants.colWorkoutDate} TEXT NOT NULL,
+        ${Constants.colWorkoutCompleted} INTEGER NOT NULL DEFAULT 0
       )
     ''');
 
     await db.execute('''
-      CREATE TABLE workout_sets (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        workout_id INTEGER NOT NULL,
-        exercise_name TEXT NOT NULL,
-        set_number INTEGER NOT NULL,
-        weight REAL NOT NULL,
-        reps INTEGER NOT NULL,
-        FOREIGN KEY (workout_id) REFERENCES workouts(id) ON DELETE CASCADE
+      CREATE TABLE IF NOT EXISTS ${Constants.tableWorkoutSets} (
+        ${Constants.colId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${Constants.colSetWorkoutId} INTEGER NOT NULL,
+        ${Constants.colSetExerciseName} TEXT NOT NULL,
+        ${Constants.colSetNumber} INTEGER NOT NULL,
+        ${Constants.colSetWeight} REAL NOT NULL,
+        ${Constants.colSetReps} INTEGER NOT NULL,
+        FOREIGN KEY (${Constants.colSetWorkoutId}) REFERENCES ${Constants.tableWorkouts}(${Constants.colId}) ON DELETE CASCADE
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${Constants.tablePlannedExercises} (
+        ${Constants.colId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${Constants.colPlannedDayOfWeek} INTEGER,
+        ${Constants.colPlannedSplitName} TEXT,
+        ${Constants.colPlannedExerciseName} TEXT,
+        ${Constants.colPlannedTargetSets} INTEGER,
+        ${Constants.colPlannedTargetReps} INTEGER,
+        ${Constants.colPlannedRestSeconds} INTEGER
       )
     ''');
   }
 
   Future<void> _upgradeDB(Database db, int oldVersion, int newVersion) async {
-    await db.execute('DELETE FROM workout_sets;');
-    await db.execute('DELETE FROM workouts;');
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS ${Constants.tablePlannedExercises} (
+        ${Constants.colId} INTEGER PRIMARY KEY AUTOINCREMENT,
+        ${Constants.colPlannedDayOfWeek} INTEGER,
+        ${Constants.colPlannedSplitName} TEXT,
+        ${Constants.colPlannedExerciseName} TEXT,
+        ${Constants.colPlannedTargetSets} INTEGER,
+        ${Constants.colPlannedTargetReps} INTEGER,
+        ${Constants.colPlannedRestSeconds} INTEGER
+      )
+    ''');
   }
 
   Future<int> insertWorkout(Workout workout) async {
     final db = await database;
     final map = workout.toMap();
-    if (map['id'] == null) {
-      map.remove('id');
+    if (map[Constants.colId] == null) {
+      map.remove(Constants.colId);
     }
     return await db.insert(
-      'workouts',
+      Constants.tableWorkouts,
       map,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -97,9 +120,9 @@ class DatabaseManager {
   Future<void> completeWorkout(int workoutId) async {
     final db = await database;
     await db.update(
-      'workouts',
-      {'completed': 1},
-      where: 'id = ?',
+      Constants.tableWorkouts,
+      {Constants.colWorkoutCompleted: 1},
+      where: '${Constants.colId} = ?',
       whereArgs: [workoutId],
     );
   }
@@ -107,11 +130,11 @@ class DatabaseManager {
   Future<int> insertSet(WorkoutSet workoutSet) async {
     final db = await database;
     final map = workoutSet.toMap();
-    if (map['id'] == null) {
-      map.remove('id');
+    if (map[Constants.colId] == null) {
+      map.remove(Constants.colId);
     }
     return await db.insert(
-      'workout_sets',
+      Constants.tableWorkoutSets,
       map,
       conflictAlgorithm: ConflictAlgorithm.replace,
     );
@@ -120,8 +143,8 @@ class DatabaseManager {
   Future<List<Workout>> getWorkouts() async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
-      'workouts',
-      orderBy: 'id DESC',
+      Constants.tableWorkouts,
+      orderBy: '${Constants.colId} DESC',
     );
     return maps.map((map) => Workout.fromMap(map)).toList();
   }
@@ -129,10 +152,10 @@ class DatabaseManager {
   Future<List<WorkoutSet>> getSetsForWorkout(int workoutId) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.query(
-      'workout_sets',
-      where: 'workout_id = ?',
+      Constants.tableWorkoutSets,
+      where: '${Constants.colSetWorkoutId} = ?',
       whereArgs: [workoutId],
-      orderBy: 'set_number ASC',
+      orderBy: '${Constants.colSetNumber} ASC',
     );
     return maps.map((map) => WorkoutSet.fromMap(map)).toList();
   }
@@ -140,19 +163,52 @@ class DatabaseManager {
   Future<Map<String, double>> getPersonalRecords() async {
     final db = await database;
     final List<Map<String, dynamic>> result = await db.rawQuery('''
-      SELECT exercise_name, MAX(weight) as max_weight
-      FROM workout_sets
-      GROUP BY exercise_name
+      SELECT ${Constants.colSetExerciseName}, MAX(${Constants.colSetWeight}) as ${Constants.colMaxWeightAlias}
+      FROM ${Constants.tableWorkoutSets}
+      GROUP BY ${Constants.colSetExerciseName}
     ''');
 
     final Map<String, double> records = {};
     for (final row in result) {
-      final exerciseName = row['exercise_name'] as String?;
-      final maxWeight = row['max_weight'] as num?;
+      final exerciseName = row[Constants.colSetExerciseName] as String?;
+      final maxWeight = row[Constants.colMaxWeightAlias] as num?;
       if (exerciseName != null && maxWeight != null) {
         records[exerciseName] = maxWeight.toDouble();
       }
     }
     return records;
+  }
+
+  Future<int> insertPlannedExercise(PlannedExercise ex) async {
+    final db = await database;
+    final map = ex.toMap();
+    if (map[Constants.colId] == null) {
+      map.remove(Constants.colId);
+    }
+    return await db.insert(
+      Constants.tablePlannedExercises,
+      map,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> deletePlannedExercise(int id) async {
+    final db = await database;
+    await db.delete(
+      Constants.tablePlannedExercises,
+      where: '${Constants.colId} = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<PlannedExercise>> getPlannedExercisesForDay(int dayOfWeek) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      Constants.tablePlannedExercises,
+      where: '${Constants.colPlannedDayOfWeek} = ?',
+      whereArgs: [dayOfWeek],
+      orderBy: '${Constants.colId} ASC',
+    );
+    return maps.map((map) => PlannedExercise.fromMap(map)).toList();
   }
 }
