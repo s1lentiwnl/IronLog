@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import '../support/Constants.dart';
+
 class WorkoutSet {
   final int? id;
   final int workoutId;
@@ -37,23 +39,23 @@ class WorkoutSet {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
-      'workout_id': workoutId,
-      'exercise_name': exerciseName,
-      'set_number': setNumber,
-      'weight': weight,
-      'reps': reps,
+      Constants.colId: id,
+      Constants.colSetWorkoutId: workoutId,
+      Constants.colSetExerciseName: exerciseName,
+      Constants.colSetNumber: setNumber,
+      Constants.colSetWeight: weight,
+      Constants.colSetReps: reps,
     };
   }
 
   factory WorkoutSet.fromMap(Map<String, dynamic> map) {
     return WorkoutSet(
-      id: map['id'] as int?,
-      workoutId: map['workout_id'] as int,
-      exerciseName: map['exercise_name'] as String,
-      setNumber: map['set_number'] as int,
-      weight: (map['weight'] as num).toDouble(),
-      reps: map['reps'] as int,
+      id: map[Constants.colId] as int?,
+      workoutId: map[Constants.colSetWorkoutId] as int,
+      exerciseName: map[Constants.colSetExerciseName] as String,
+      setNumber: map[Constants.colSetNumber] as int,
+      weight: (map[Constants.colSetWeight] as num).toDouble(),
+      reps: map[Constants.colSetReps] as int,
     );
   }
 
