@@ -62,6 +62,42 @@ class Model extends ChangeNotifier {
 
   double get workoutCompletionPercentage => todayWorkoutCompletionPercentage;
 
+  /// Restituisce la data odierna formattata in italiano (es. "Sab, 21 Nov").
+  String get formattedTodayDate {
+    final DateTime now = DateTime.now();
+    final String dayShort = Constants.weekDayShortLabels[now.weekday] ?? '';
+    final String monthShort = Constants.monthShortLabels[now.month] ?? '';
+    return '$dayShort, ${now.day} $monthShort';
+  }
+
+  /// Restituisce il nome dello split in maiuscolo per il giorno selezionato.
+  String get selectedDaySplitName {
+    if (plannedExercisesForSelectedDay.isEmpty) {
+      return '';
+    }
+    final String rawSplit = plannedExercisesForSelectedDay.first.splitName.trim();
+    if (rawSplit.isEmpty) {
+      return Constants.labelDefaultSplit;
+    }
+    return rawSplit.toUpperCase();
+  }
+
+  /// Restituisce i primi due esercizi previsti per il giorno selezionato.
+  String get selectedDayPreviewExercises {
+    return plannedExercisesForSelectedDay
+        .take(2)
+        .map((exercise) => exercise.exerciseName)
+        .join(', ');
+  }
+
+  /// Restituisce fino ai primi 2 Personal Records ordinati per carico decrescente.
+  List<MapEntry<String, double>> get topPersonalRecords {
+    final List<MapEntry<String, double>> entries =
+        personalRecords.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+    return entries.take(2).toList();
+  }
+
   Future<void> initModel() async {
     workouts = await _dbManager.getWorkouts();
     personalRecords = await _dbManager.getPersonalRecords();

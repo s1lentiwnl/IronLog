@@ -28,6 +28,15 @@ class AppColors {
   static const Color textPrimaryDark = Color(0xFFF6F7F9);
   static const Color textSecondaryDark = Color(0xFF9FB1BD);
 
+  // Surfaces, Borders & Overlays
+  static const Color cardBorderLight = Color(0xFFE6ECF1);
+  static const Color cardBorderDark = Color(0xFF263B4D);
+  static const Color cardShadowLight = Color(0x0D1D3547);
+  static const Color progressTrackOnDark = Color(0x33FFFFFF);
+  static const Color softSurfaceOnDark = Color(0x1FFFFFFF);
+  static const Color iconBadgeLight = Color(0xFFEEF4F8);
+  static const Color iconBadgeDark = Color(0xFF243B4E);
+
   // Status Colors
   static const Color success = Color(0xFF2E7D32);
   static const Color warning = Color(0xFFED6C02);

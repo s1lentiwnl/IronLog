@@ -44,14 +44,24 @@ class Constants {
   static const int tabWorkout = 2;
   static const int tabSettings = 3;
 
-  // Navigation tab labels
+  // Navigation tab labels (Italiano)
   static const String labelNavHome = 'Home';
-  static const String labelNavPlanner = 'Planner';
-  static const String labelNavWorkout = 'Workout';
-  static const String labelNavSettings = 'Settings';
+  static const String labelNavPlanner = 'Schede';
+  static const String labelNavWorkout = 'Allenamento';
+  static const String labelNavSettings = 'Impostazioni';
 
   // Days of the week (1 = Lunedì ... 7 = Domenica)
   static const List<int> weekDays = [1, 2, 3, 4, 5, 6, 7];
+
+  static const List<String> weekDayInitials = [
+    'L',
+    'M',
+    'M',
+    'G',
+    'V',
+    'S',
+    'D',
+  ];
 
   static const Map<int, String> weekDayShortLabels = {
     1: 'Lun',
@@ -82,4 +92,53 @@ class Constants {
     'Sab',
     'Dom',
   ];
+
+  static const Map<int, String> monthShortLabels = {
+    1: 'Gen',
+    2: 'Feb',
+    3: 'Mar',
+    4: 'Apr',
+    5: 'Mag',
+    6: 'Giu',
+    7: 'Lug',
+    8: 'Ago',
+    9: 'Set',
+    10: 'Ott',
+    11: 'Nov',
+    12: 'Dic',
+  };
+
+  // Home screen UI strings (Italiano)
+  static const String labelToday = 'Oggi';
+  static const String labelTodayWorkout = 'ALLENAMENTO DI OGGI';
+  static const String labelDefaultSplit = 'ALLENAMENTO';
+  static const String labelStartsWith = 'Si parte con:';
+  static const String labelStartWorkout = 'Inizia allenamento';
+  static const String labelCompleted = 'completato';
+  static const String labelRestDayOverline = 'GIORNO DI RIPOSO';
+  static const String labelRestDayMessage =
+      'Goditi il riposo, te lo sei meritato.';
+  static const String labelPlanWorkout = 'Pianifica scheda';
+  static const String labelPrSectionTitle = 'I tuoi PR a colpo d\'occhio';
+  static const String labelBestLift = 'Miglior alzata';
+  static const String labelNoRecord = 'Nessun record';
+  static const String labelNoRecordSubtitle = 'Registra una serie';
+  static const String unitKg = 'kg';
+
+  // AI Assistant UI strings (Italiano)
+  static const String labelAiBannerTitle = 'Non fermare l\'allenamento.';
+  static const String labelAiBannerSubtitle =
+      'Assistente AI esercizi sostitutivi';
+  static const String labelAiDialogTitle = 'Assistente AI Sostituzioni';
+  static const String labelAiDialogSubtitle =
+      'Indica il macchinario o l\'esercizio occupato per ricevere subito un\'alternativa valida.';
+  static const String labelAiInputHint = 'Quale macchinario è occupato?';
+  static const String labelAiAskButton = 'Chiedi alternativa';
+  static const String labelAiEmptyInputError =
+      'Inserisci il nome di un macchinario o di un esercizio.';
+  static const String labelAiResponseTitle = 'Alternativa suggerita';
+  static const String labelAiResponseNotice =
+      'Risposta simulata in attesa dell\'integrazione AI finale.';
+  static const String labelClose = 'Chiudi';
+  static const String tooltipAiAssistant = 'Apri Assistente AI Sostituzioni';
 }
